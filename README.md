@@ -7,6 +7,12 @@ During development macOS registers every copy of an app it sees: build output, u
 disk images. They all share one bundle identifier, so the app launcher, Spotlight and "Open With" can end up
 pointing at a stale copy instead of the installed app.
 
+## Install
+
+Download `LaunchSweep-<version>.dmg` from the
+[latest release](https://github.com/gicek/LaunchSweep/releases/latest), open it and drag LaunchSweep to
+Applications. Releases are signed with Developer ID and notarized by Apple. Requires macOS 14 or later.
+
 ## What it finds
 
 LaunchSweep scans the whole database, needs no input, and lists:
@@ -51,7 +57,7 @@ make run    # build and launch
 make test   # unit tests
 make open   # generate the project and open it in Xcode
 make clean  # remove build output and unregister the build copies
-make help   # everything else
+make help   # everything else, including the release targets
 ```
 
 The Makefile finds Xcode even when `xcode-select` points at the Command Line Tools; set `DEVELOPER_DIR` to
@@ -62,6 +68,38 @@ pick another Xcode.
 Builds are signed ad hoc by default, so any Mac can build and run them. To sign with your own certificate,
 copy `Config/LaunchSweep.local.xcconfig.example` to `Config/LaunchSweep.local.xcconfig` (not committed) and
 set your team.
+
+### Release
+
+```sh
+make bump VERSION=1.2.3   # set the version, raise the build number, create the release notes template
+                          # write docs/release-notes/1.2.3/en.md, then commit and push
+make publish              # test, build, notarize and upload a draft GitHub release (not live yet)
+make verify-release       # download the draft and check everything users will get
+make go-live              # verify again, then publish the draft as the latest release
+```
+
+Until `make go-live`, the release is a draft that nobody else can see. The steps can also be run one at a
+time:
+
+```sh
+make release   # archive, export with Developer ID -> build/release (app and zip, not notarized)
+make dist      # release, then DMG, notarize, staple -> build/dist
+```
+
+`build/release` and `build/dist` also hold `SHA256SUMS` and `BUILD_INFO` (version, build number, Git
+commit, signing identity and notarization). Only `build/dist` is for distribution. Release builds are
+universal (Apple silicon and Intel).
+
+Releases need, and `Scripts/release.sh` checks before building:
+
+- a Developer ID Application certificate, with its team set in `Config/LaunchSweep.local.xcconfig` (the
+  example file shows the Manual signing settings and the secure timestamp flag)
+- for `dist` and `publish`: [uv](https://docs.astral.sh/uv/), which runs `dmgbuild`, and a `notarytool`
+  keychain profile, named by `NOTARY_PROFILE` in the environment or in the local xcconfig:
+  `xcrun notarytool store-credentials <profile> --apple-id <apple-id> --team-id <team-id>`
+- for `publish`: `gh`, logged in; a clean, pushed working tree; a version without a GitHub release yet;
+  release notes
 
 ## Project layout
 
@@ -75,8 +113,9 @@ LaunchSweep/
   Resources/         Asset catalog (app icon) and Localizable.xcstrings
   Info.plist         Generated from project.yml by XcodeGen; change project.yml instead
 Tests/               Unit tests (Swift Testing) for the dump parser, the analyzer and the window state
-Scripts/             build_icon.sh
+Scripts/             App icon, version bump, release and GitHub release scripts
 design/logo/         Source SVG of the app icon
+docs/release-notes/  Release notes, one folder per version
 ```
 
 How a scan works: `LaunchServices` runs `lsregister -dump`, `LaunchServicesDump` turns the text into
