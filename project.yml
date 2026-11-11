@@ -1,0 +1,89 @@
+name: LaunchSweep
+# Source language is English: user-facing text is written as English literals in code; translations live in
+# LaunchSweep/Resources/Localizable.xcstrings.
+options:
+  developmentLanguage: en
+  defaultConfig: Debug
+  bundleIdPrefix: com.gicek
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "14.0"
+
+fileGroups:
+  - Config/LaunchSweep.xcconfig
+  - Config/LaunchSweep.local.xcconfig.example
+  - README.md
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  LaunchSweep:
+    type: application
+    platform: macOS
+    productName: LaunchSweep
+    configFiles:
+      Debug: Config/LaunchSweep.xcconfig
+      Release: Config/LaunchSweep.xcconfig
+    sources:
+      - path: LaunchSweep
+    info:
+      path: LaunchSweep/Info.plist
+      properties:
+        CFBundleDisplayName: LaunchSweep
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHighResolutionCapable: true
+        NSHumanReadableCopyright: "© 2026 gicek"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gicek.launchsweep
+        PRODUCT_NAME: LaunchSweep
+        PRODUCT_MODULE_NAME: LaunchSweep
+        ENABLE_HARDENED_RUNTIME: YES
+        # No App Sandbox: reading and changing the Launch Services database goes through lsregister, and
+        # checking whether registered apps still exist needs paths anywhere on disk.
+        ENABLE_APP_SANDBOX: NO
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+        # The icon is generated from design/logo by make icon (Scripts/build_icon.sh).
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+  LaunchSweepTests:
+    type: bundle.unit-test
+    platform: macOS
+    # Same signing as the app: the app uses the Hardened Runtime and only loads test bundles signed by the same team.
+    configFiles:
+      Debug: Config/LaunchSweep.xcconfig
+      Release: Config/LaunchSweep.xcconfig
+    sources:
+      - path: Tests
+    dependencies:
+      - target: LaunchSweep
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.gicek.launchsweep.tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/LaunchSweep.app/Contents/MacOS/LaunchSweep
+        BUNDLE_LOADER: $(TEST_HOST)
+
+schemes:
+  LaunchSweep:
+    build:
+      targets:
+        LaunchSweep: all
+        LaunchSweepTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - LaunchSweepTests
+    archive:
+      config: Release

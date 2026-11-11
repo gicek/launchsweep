@@ -1,0 +1,6 @@
+// Ad-hoc signing by default so any machine can build and run. With an Apple developer certificate,
+// copy LaunchSweep.local.xcconfig.example to LaunchSweep.local.xcconfig (not committed) and set the team.
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+#include? "LaunchSweep.local.xcconfig"

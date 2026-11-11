@@ -1,0 +1,7 @@
+// Copy to LaunchSweep.local.xcconfig (not committed). Use Automatic with an Apple Development certificate;
+// with only a Developer ID certificate, use Manual:
+//   CODE_SIGN_STYLE = Manual
+//   CODE_SIGN_IDENTITY = Developer ID Application
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = YOURTEAMID
+CODE_SIGN_IDENTITY = Apple Development
